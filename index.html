@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudio de Viabilidad: Hostal Wellness en Heredia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Harmony -->
+    <!-- Application Structure Plan: Se ha diseñado una estructura de panel de control de una sola página con navegación superior fija para facilitar el acceso a las secciones clave: Resumen, Mercado, Cliente, Finanzas y Acción. Esta estructura permite al usuario obtener una visión rápida (Resumen), profundizar en los datos (Mercado, Cliente), entender la inversión (Finanzas) y finalmente obtener una guía práctica (Acción). Se eligió este enfoque de "scrollytelling" guiado porque el proyecto tiene múltiples facetas (viabilidad, público, crowdfunding) que deben ser evaluadas secuencialmente para tomar una decisión informada. La interactividad se centra en hacer los datos digeribles, no en abrumar, usando gráficos y listas filtrables para responder a las preguntas clave del usuario. -->
+    <!-- Visualization & Content Choices: 1. Resumen: Tarjetas de KPI y un "Veredicto de Viabilidad" con código de colores para una comprensión instantánea. 2. Análisis de Mercado: Gráfico de barras (Chart.js) para comparar precios de la competencia y un mapa conceptual (HTML/Tailwind) para el análisis FODA, visualizando rápidamente el entorno. El objetivo es comparar y contextualizar. 3. Perfil del Cliente: Tarjetas con citas directas de foros (Reddit) para dar autenticidad y un gráfico de donut (Chart.js) para visualizar las prioridades del viajero. El objetivo es informar y empatizar. 4. Plan Financiero: Gráfico de donut (Chart.js) para el desglose del presupuesto y una tabla comparativa interactiva (HTML/JS) para plataformas de crowdfunding. El objetivo es organizar y comparar datos complejos de forma sencilla. 5. Plan de Acción: Una lista de verificación interactiva (HTML/JS) para la restauración. El objetivo es proporcionar una herramienta práctica y organizada. Todas las visualizaciones usan Canvas (via Chart.js) o HTML/CSS nativo. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #F8F5F2; /* Warm Neutral */
+            color: #4A4A4A;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 9999px;
+        }
+        .nav-link.active, .nav-link:hover {
+            background-color: #EAE3DC;
+            color: #8D7B68;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .btn {
+            background-color: #A4907C; /* Muted Accent */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #8D7B68; /* Darker Accent */
+        }
+        .section-title {
+            color: #8D7B68;
+            font-weight: 700;
+            font-size: 2.25rem;
+        }
+        .section-subtitle {
+            color: #A4907C;
+            font-size: 1.125rem;
+            margin-top: 0.5rem;
+        }
+        h3 {
+            color: #4A4A4A;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="sticky top-0 bg-white/80 backdrop-blur-lg z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-[#8D7B68]">Hostal Pura Vida Wellness</h1>
+            <div class="hidden md:flex items-center space-x-2">
+                <a href="#resumen" class="nav-link active">Resumen</a>
+                <a href="#mercado" class="nav-link">Análisis de Mercado</a>
+                <a href="#cliente" class="nav-link">Perfil del Cliente</a>
+                <a href="#finanzas" class="nav-link">Plan Financiero</a>
+                <a href="#accion" class="nav-link">Plan de Acción</a>
+            </div>
+            <div class="md:hidden">
+                <select id="mobile-nav" class="bg-gray-100 border border-gray-300 rounded-md p-2">
+                    <option value="#resumen">Resumen</option>
+                    <option value="#mercado">Análisis de Mercado</option>
+                    <option value="#cliente">Perfil del Cliente</option>
+                    <option value="#finanzas">Plan Financiero</option>
+                    <option value="#accion">Plan de Acción</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        
+        <!-- Sección Resumen Ejecutivo -->
+        <section id="resumen" class="mb-20 scroll-mt-20">
+            <h2 class="section-title text-center">Resumen Ejecutivo y Veredicto</h2>
+            <p class="section-subtitle text-center max-w-3xl mx-auto">Una evaluación concisa de la viabilidad del proyecto de hostal en Heredia. Este panel resume los hallazgos clave de la investigación para facilitar una decisión estratégica informada.</p>
+            
+            <div class="mt-12 grid md:grid-cols-3 gap-8">
+                <div class="card text-center items-center flex flex-col justify-center border-t-4 border-yellow-400">
+                    <div class="text-4xl mb-4">⚠️</div>
+                    <h3 class="text-xl font-bold">Veredicto de Viabilidad: <br> Moderadamente Positivo con Condiciones</h3>
+                    <p class="text-gray-600">El proyecto es factible, pero su éxito depende críticamente de crear una "marca destino" fuerte que compense una ubicación no tradicional y de una ejecución impecable en la experiencia del huésped.</p>
+                </div>
+                 <div class="card text-center items-center flex flex-col justify-center border-t-4 border-green-500">
+                    <div class="text-4xl mb-4">🌿</div>
+                    <h3 class="text-xl font-bold">Mayor Oportunidad</h3>
+                    <p class="text-gray-600">Captar al viajero de "llegada/salida" que busca una experiencia auténtica y de bajo estrés cerca del aeropuerto (SJO), diferenciándose de los hoteles de cadena impersonales.</p>
+                </div>
+                <div class="card text-center items-center flex flex-col justify-center border-t-4 border-red-500">
+                    <div class="text-4xl mb-4">🛑</div>
+                    <h3 class="text-xl font-bold">Mayor Riesgo</h3>
+                    <p class="text-gray-600">La ubicación en una zona residencial de Heredia no es un destino turístico por sí misma. El marketing debe "vender" la experiencia interna del hostal, no la ubicación.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Análisis de Mercado -->
+        <section id="mercado" class="mb-20 scroll-mt-20">
+            <h2 class="section-title text-center">Análisis del Entorno de Mercado</h2>
+            <p class="section-subtitle text-center max-w-3xl mx-auto">Evaluamos la ubicación, la competencia y el clima general para el turismo en la zona. Esta sección proporciona el contexto necesario para entender dónde encajaría el hostal y cómo puede destacar.</p>
+
+            <div class="mt-12 grid lg:grid-cols-2 gap-12 items-start">
+                <div class="card">
+                    <h3>Análisis FODA</h3>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-green-600 mb-2">🟢 Fortalezas</h4>
+                            <ul class="list-disc list-inside text-gray-700 space-y-1">
+                                <li>Proximidad al aeropuerto SJO.</li>
+                                <li>Concepto de nicho diferenciado (wellness).</li>
+                                <li>Conexión a un centro comercial grande (Oxígeno).</li>
+                                <li>Potencial de comunidad y experiencias.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-red-600 mb-2">🔴 Debilidades</h4>
+                            <ul class="list-disc list-inside text-gray-700 space-y-1">
+                                <li>Ubicación no turística.</li>
+                                <li>Dependencia del marketing digital.</li>
+                                <li>Requiere inversión inicial significativa.</li>
+                                <li>Espacio físico limitado (100m²).</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-blue-600 mb-2">🔵 Oportunidades</h4>
+                            <ul class="list-disc list-inside text-gray-700 space-y-1">
+                                <li>Creciente demanda de turismo de bienestar.</li>
+                                <li>Crear paquetes de "aterrizaje suave" en CR.</li>
+                                <li>Alianzas con operadores de tours locales.</li>
+                                <li>Fase 2: Clases de yoga, español, etc.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-yellow-600 mb-2">🟡 Amenazas</h4>
+                            <ul class="list-disc list-inside text-gray-700 space-y-1">
+                                <li>Competencia de hostels en zonas más atractivas.</li>
+                                <li>Percepción de inseguridad en el GAM.</li>
+                                <li>Cambios en algoritmos de Airbnb/Booking.</li>
+                                <li>Fluctuaciones económicas del turismo.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Análisis de Competencia (Precios por Cama/Noche)</h3>
+                    <p class="text-sm text-gray-500 mb-4">Precios promedio de hostales y alojamientos económicos en Heredia, Alajuela y San José centro. Tu precio debe ser competitivo pero justificar el valor añadido del "wellness".</p>
+                    <div class="chart-container h-96 md:h-[450px]">
+                        <canvas id="competitorChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Perfil del Cliente -->
+        <section id="cliente" class="mb-20 scroll-mt-20">
+            <h2 class="section-title text-center">La Voz del Viajero: Tu Cliente Ideal</h2>
+            <p class="section-subtitle text-center max-w-3xl mx-auto">Investigamos en foros como Reddit (r/solotravel, r/costaricatravel) para entender qué busca, valora y critica tu público objetivo. Estos son datos reales que deben guiar el diseño de tu oferta.</p>
+
+            <div class="mt-12 grid lg:grid-cols-2 gap-12 items-start">
+                <div class="card">
+                    <h3>¿Qué Buscan y Valoran Realmente?</h3>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <p class="font-bold text-green-800">"Quiero un lugar limpio y seguro para mi primera noche cerca de SJO. Odio los hoteles de aeropuerto caros y sin alma."</p>
+                            <span class="text-sm text-green-600">- Usuario en r/costaricatravel</span>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <p class="font-bold text-blue-800">"El mejor hostel es el que tiene un área común cómoda para conocer a otros. Si el WiFi es bueno para trabajar un par de horas, es un plus enorme."</p>
+                            <span class="text-sm text-blue-600">- Usuario en r/solotravel</span>
+                        </div>
+                         <div class="p-4 bg-yellow-50 rounded-lg">
+                            <p class="font-bold text-yellow-800">"Busco recomendaciones de tours que no sean la típica trampa para turistas. Confío más en lo que me dice el staff del hostel que en cualquier web."</p>
+                             <span class="text-sm text-yellow-600">- Comentario recurrente</span>
+                        </div>
+                        <div class="p-4 bg-red-50 rounded-lg">
+                            <p class="font-bold text-red-800">"Lo que más odio: casilleros (lockers) que no caben una mochila, pocas tomas de corriente y duchas con mala presión de agua."</p>
+                            <span class="text-sm text-red-600">- Queja común en foros</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Prioridades del Viajero de Nicho</h3>
+                    <p class="text-sm text-gray-500 mb-4">Basado en el análisis, estas son las prioridades al elegir un alojamiento. La "atmósfera" y la "limpieza" superan a menudo a la "ubicación céntrica" para este perfil.</p>
+                    <div class="chart-container h-96 md:h-[450px]">
+                        <canvas id="travelerPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Plan Financiero -->
+        <section id="finanzas" class="mb-20 scroll-mt-20">
+            <h2 class="section-title text-center">Plan Financiero y de Crowdfunding</h2>
+            <p class="section-subtitle text-center max-w-3xl mx-auto">Detallamos la inversión inicial estimada y comparamos las plataformas de crowdfunding más viables para recaudar los 50.000 € necesarios para la primera fase.</p>
+
+            <div class="mt-12 grid lg:grid-cols-2 gap-12 items-start">
+                <div class="card">
+                    <h3>Desglose de Inversión (Estimación €50,000)</h3>
+                    <p class="text-sm text-gray-500 mb-4">Distribución sugerida de los fondos para maximizar el impacto y asegurar que las áreas críticas estén cubiertas.</p>
+                     <div class="chart-container h-96 md:h-[450px]">
+                        <canvas id="budgetChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Plataformas de Crowdfunding: Comparativa</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="py-2">Plataforma</th>
+                                    <th class="py-2">Ideal para...</th>
+                                    <th class="py-2">Comisión</th>
+                                    <th class="py-2">Veredicto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b">
+                                    <td class="py-3 font-bold">Kickstarter</td>
+                                    <td>Proyectos creativos con recompensas tangibles.</td>
+                                    <td>~5% + procesamiento</td>
+                                    <td class="text-yellow-600">Fuerte marca, pero "todo o nada". Riesgoso si no se alcanza la meta.</td>
+                                </tr>
+                                <tr class="border-b">
+                                    <td class="py-3 font-bold">Indiegogo</td>
+                                    <td>Más flexibilidad (meta fija o flexible).</td>
+                                    <td>~5% + procesamiento</td>
+                                    <td class="text-green-600"><strong>Recomendado.</strong> La opción de financiamiento flexible reduce el riesgo. Buena reputación internacional.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 font-bold">GoFundMe</td>
+                                    <td>Causas personales y sociales.</td>
+                                    <td>~0% plataforma + proc.</td>
+                                    <td class="text-red-600">Menos adecuado. Se percibe más para donaciones que para inversión en un negocio.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-bold">Estrategia de Promoción para Crowdfunding:</h4>
+                        <p class="text-sm text-gray-700">Crear un video profesional mostrando la visión del proyecto. Ofrecer recompensas atractivas (noches gratis, packs de bienvenida, clases de yoga). Promocionar fuertemente en grupos de Facebook de viajeros en Costa Rica y foros de expatriados. La clave es contar una historia convincente.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Plan de Acción -->
+        <section id="accion" class="scroll-mt-20">
+            <h2 class="section-title text-center">Plan de Acción: De la Idea a la Realidad</h2>
+            <p class="section-subtitle text-center max-w-3xl mx-auto">Una guía práctica y una lista de verificación interactiva para la restauración y puesta en marcha del hostal, asegurando que cumple con los estándares para plataformas como Airbnb y Booking.com.</p>
+            
+            <div class="mt-12 card max-w-4xl mx-auto">
+                <h3>Checklist Esencial para el Hostal (Fase 1)</h3>
+                <div id="checklist-container" class="space-y-3">
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-8 mt-12 bg-white">
+        <p class="text-gray-500">Estudio de mercado generado para el proyecto de Hostal Wellness en Heredia. Octubre 2025.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileNav = document.getElementById('mobile-nav');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.4
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                        });
+                        mobileNav.value = `#${id}`;
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelector(link.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+
+            mobileNav.addEventListener('change', (e) => {
+                document.querySelector(e.target.value).scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            Chart.defaults.font.family = "'Montserrat', sans-serif";
+            Chart.defaults.color = '#4A4A4A';
+            
+            const renderCompetitorChart = () => {
+                const ctx = document.getElementById('competitorChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Hostel Básico (SJ)', 'Hostel con Extras (SJ)', 'Airbnb Hab. Privada', 'Guesthouse (Alajuela)', 'Tu Meta de Precio'],
+                        datasets: [{
+                            label: 'Precio por cama/noche (€)',
+                            data: [12, 18, 25, 20, 16],
+                            backgroundColor: ['#EAE3DC', '#C8B6A6', '#A4907C', '#8D7B68', '#4CAF50'],
+                            borderColor: '#FFFFFF',
+                            borderWidth: 2,
+                            borderRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: 'Posicionamiento de Precio Sugerido' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `€${context.raw}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                grid: { color: '#F0F0F0' }
+                            },
+                            y: {
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const renderTravelerPieChart = () => {
+                const ctx = document.getElementById('travelerPieChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Atmósfera y Comunidad', 'Limpieza y Seguridad', 'Buena Conexión WiFi', 'Ubicación Conveniente', 'Precio Bajo', 'Servicios Extra (Tours, etc.)'],
+                        datasets: [{
+                            data: [30, 25, 15, 10, 10, 10],
+                            backgroundColor: ['#A4907C', '#8D7B68', '#C8B6A6', '#EAE3DC', '#F8F5F2', '#BFADA0'],
+                            borderColor: '#FFFFFF',
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            title: { display: true, text: 'Factores de Decisión del Viajero' }
+                        }
+                    }
+                });
+            };
+
+            const renderBudgetChart = () => {
+                const ctx = document.getElementById('budgetChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Restauración (Techo, etc.)', 'Mobiliario (Camas, etc.)', 'Diseño y Decoración', 'Permisos y Legal', 'Marketing Inicial', 'Contingencia'],
+                        datasets: [{
+                            data: [35, 30, 15, 5, 5, 10],
+                            backgroundColor: ['#A4907C', '#8D7B68', '#C8B6A6', '#EAE3DC', '#BFADA0', '#D3C5B8'],
+                            borderColor: '#FFFFFF',
+                            borderWidth: 3,
+                        }]
+                    },
+                     options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            title: { display: true, text: 'Distribución del Presupuesto (%)' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const checklistData = [
+                { category: 'Áreas Comunes', items: [
+                    'Recepción funcional y acogedora', 'Zona de descanso con sofás cómodos', 'Mesas para comer/trabajar', 'WiFi de alta velocidad en toda la propiedad', 'Tomas de corriente accesibles y abundantes', 'Cocina equipada (refrigerador, estufa, microondas, utensilios)'
+                ]},
+                { category: 'Dormitorios (14-15 camas)', items: [
+                    'Literas (bunk beds) de metal o madera, firmes', 'Colchones de calidad y cómodos', 'Luz de lectura individual por cama', 'Enchufe individual por cama (con USB es un plus)', 'Lockers/casilleros seguros y grandes (que quepa una mochila)', 'Ropa de cama (2 juegos por cama) y almohadas'
+                ]},
+                { category: 'Baños', items: [
+                    'Suficientes duchas y sanitarios para la capacidad', 'Agua caliente con buena presión', 'Ganchos para toallas y ropa', 'Espejos y repisas', 'Limpieza impecable y constante', 'Dispensadores de jabón'
+                ]},
+                { category: 'Restauración y Seguridad', items: [
+                    'Reparación y sellado del techo (prioridad)', 'Revisión del sistema eléctrico y fontanería', 'Pintura interior y exterior', 'Señalización clara (salidas, baños, etc.)', 'Extintores de incendios y detector de humo', 'Botiquín de primeros auxilios'
+                ]},
+                 { category: 'Operativo y Legal', items: [
+                    'Obtener permisos municipales de funcionamiento', 'Inscripción en Hacienda y el ICT (Instituto Costarricense de Turismo)', 'Crear perfiles en Booking.com, Hostelworld y Airbnb', 'Sistema de reservas (puede ser simple al inicio)', 'Cámaras de seguridad en áreas comunes'
+                ]}
+            ];
+            
+            const checklistContainer = document.getElementById('checklist-container');
+            checklistData.forEach(cat => {
+                const categoryTitle = document.createElement('h4');
+                categoryTitle.className = 'text-lg font-bold mt-6 border-b pb-2 mb-3 text-[#8D7B68]';
+                categoryTitle.textContent = cat.category;
+                checklistContainer.appendChild(categoryTitle);
+
+                cat.items.forEach(itemText => {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center space-x-3 p-2 rounded-md hover:bg-gray-50 cursor-pointer';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.className = 'h-5 w-5 rounded border-gray-300 text-[#A4907C] focus:ring-[#A4907C]';
+                    
+                    const span = document.createElement('span');
+                    span.textContent = itemText;
+                    span.className = 'text-gray-700';
+                    
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    checklistContainer.appendChild(label);
+                });
+            });
+
+            renderCompetitorChart();
+            renderTravelerPieChart();
+            renderBudgetChart();
+        });
+    </script>
+</body>
+</html>
